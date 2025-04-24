@@ -6,17 +6,12 @@ export async function POST(request: Request) {
     
     return NextResponse.json({
       status: 'success',
-      message: 'Запрос успешно обработан',
-      receivedData: body,
-      timestamp: new Date().toISOString(),
+      message: 'API работает',
+      receivedData: body
     });
   } catch (error) {
     return NextResponse.json(
-      {
-        status: 'error',
-        message: 'Ошибка при обработке запроса',
-        error: (error as Error).message,
-      },
+      { error: 'Произошла ошибка при обработке запроса' },
       { status: 500 }
     );
   }

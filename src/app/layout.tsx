@@ -1,20 +1,24 @@
 import type { Metadata } from 'next';
-import type { ReactNode } from 'react';
+import { Inter } from 'next/font/google';
 import './globals.css';
 
+const inter = Inter({ subsets: ['latin', 'cyrillic'] });
+
 export const metadata: Metadata = {
-  title: 'Тестовая страница',
-  description: 'Тестовая страница с Next.js',
+  title: 'Handmade Store',
+  description: 'Магазин рукодельных товаров',
+  viewport: 'width=device-width, initial-scale=1',
+  themeColor: '#ffffff'
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: ReactNode;
-}) {
+interface RootLayoutProps {
+  children: React.ReactNode;
+}
+
+export default function RootLayout({ children }: RootLayoutProps): JSX.Element {
   return (
     <html lang="ru">
-      <body>{children}</body>
+      <body className={inter.className}>{children}</body>
     </html>
   );
 } 

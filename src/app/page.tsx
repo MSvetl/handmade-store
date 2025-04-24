@@ -1,55 +1,63 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { fetchApi } from '@/lib/api';
+import { logger } from '@/lib/logger';
+import { API_ENDPOINTS, APP_CONFIG } from '@/config/constants';
+import type { ApiResponse } from '@/types/api';
 
-export default function Home() {
-  const [response, setResponse] = useState<string>('');
+export default function Home(): JSX.Element {
+  const [response, setResponse] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const testServerConnection = async (): Promise<void> => {
     setLoading(true);
+    setError(null);
     
     try {
-      const res = await fetch('/api/test', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ message: 'Тестовый запрос' }),
-      });
-      
-      const data = await res.json();
-      setResponse(JSON.stringify(data, null, 2));
-    } catch (error) {
-      setResponse('Произошла ошибка: ' + (error as Error).message);
+      const data = await fetchApi<ApiResponse>(API_ENDPOINTS.TEST);
+      setResponse(data);
+      logger.info('Server connection test successful', data);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Произошла неизвестная ошибка';
+      setError(errorMessage);
+      logger.error('Server connection test failed', err);
+      setResponse(null);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen p-8">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6">Тестовая страница</h1>
-        
-        <form onSubmit={handleSubmit} className="mb-6">
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
-          >
-            {loading ? 'Отправка...' : 'Отправить запрос'}
-          </button>
-        </form>
-
-        {response && (
-          <div className="bg-gray-100 p-4 rounded">
-            <h2 className="text-xl font-semibold mb-2">Ответ сервера:</h2>
-            <pre className="whitespace-pre-wrap">{response}</pre>
-          </div>
-        )}
-      </div>
+    <main className="flex min-h-screen flex-col items-center justify-center p-24 gap-4">
+      <h1 className="text-2xl font-bold mb-4">Тестовая страница</h1>
+      <button
+        onClick={testServerConnection}
+        disabled={loading}
+        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400 transition-colors"
+        style={{ backgroundColor: loading ? undefined : APP_CONFIG.THEME.PRIMARY_COLOR }}
+      >
+        {loading ? 'Загрузка...' : 'Проверить соединение с сервером'}
+      </button>
+      
+      {error && (
+        <div 
+          className="mt-4 p-4 rounded"
+          style={{ 
+            backgroundColor: `${APP_CONFIG.THEME.ERROR_COLOR}20`,
+            color: APP_CONFIG.THEME.ERROR_COLOR 
+          }}
+        >
+          {error}
+        </div>
+      )}
+      
+      {response && (
+        <pre className="mt-4 p-4 bg-gray-100 rounded overflow-auto max-w-full">
+          {JSON.stringify(response, null, 2)}
+        </pre>
+      )}
     </main>
   );
 } 

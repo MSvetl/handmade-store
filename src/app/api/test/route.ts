@@ -1,18 +1,30 @@
 import { NextResponse } from 'next/server';
+import type { SuccessResponse } from '@/types/api';
 
-export async function POST(request: Request) {
+export async function GET() {
   try {
-    const body = await request.json();
-    
-    return NextResponse.json({
+    const response: SuccessResponse = {
       status: 'success',
-      message: 'API работает',
-      receivedData: body
+      message: 'Сервер работает нормально',
+      timestamp: new Date().toISOString()
+    };
+
+    return new Response(JSON.stringify(response), {
+      headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Произошла ошибка при обработке запроса' },
-      { status: 500 }
+    console.error('Test endpoint error:', error);
+    return new Response(
+      JSON.stringify({
+        status: 'error',
+        message: 'Внутренняя ошибка сервера',
+        timestamp: new Date().toISOString(),
+        code: 500
+      }),
+      { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }
     );
   }
 } 

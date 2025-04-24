@@ -1,5 +1,12 @@
 import React from 'react';
 
+/**
+ * Интерфейс пропсов для компонента Button
+ * @property {() => void} onClick - Обработчик клика по кнопке
+ * @property {React.ReactNode} children - Содержимое кнопки
+ * @property {boolean} disabled - Флаг отключения кнопки
+ * @property {string} className - Дополнительные CSS классы
+ */
 interface ButtonProps {
   onClick?: () => void;
   children: React.ReactNode;
@@ -7,6 +14,21 @@ interface ButtonProps {
   className?: string;
 }
 
+/**
+ * Переиспользуемый компонент кнопки
+ * 
+ * @component
+ * @example
+ * ```tsx
+ * <Button 
+ *   onClick={() => console.log('clicked')}
+ *   disabled={false}
+ *   className="custom-class"
+ * >
+ *   Click me
+ * </Button>
+ * ```
+ */
 const Button: React.FC<ButtonProps> = ({
   onClick,
   children,

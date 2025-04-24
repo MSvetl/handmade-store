@@ -3,11 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "npm run kill-port && next dev -p 3001",
-    "kill-port": "npx kill-port 3001",
+    "dev": "npm run kill-port && next dev -p $PORT",
+    "kill-port": "npx kill-port $PORT",
     "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "start": "next start -p $PORT",
+    "lint": "next lint",
+    "clean": "rm -rf .next node_modules && npm cache clean --force && npm install"
   },
   "dependencies": {
     "next": "14.1.0",

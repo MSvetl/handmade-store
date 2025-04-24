@@ -3,12 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "npm run kill-port; next dev -p %PORT%",
-    "kill-port": "npx kill-port %PORT%",
+    "dev": "powershell -Command \"$env:PORT = if ($env:PORT) { $env:PORT } else { '3001' }; next dev -p $env:PORT\"",
     "build": "next build",
-    "start": "next start -p %PORT%",
+    "start": "powershell -Command \"$env:PORT = if ($env:PORT) { $env:PORT } else { '3001' }; next start -p $env:PORT\"",
     "lint": "next lint",
-    "clean": "rm -rf .next node_modules; npm cache clean --force; npm install"
+    "clean": "powershell -File clean.ps1"
   },
   "dependencies": {
     "next": "14.1.0",
@@ -24,5 +23,8 @@
     "postcss": "^8.5.3",
     "tailwindcss": "^3.4.17",
     "typescript": "5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

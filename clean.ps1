@@ -1,18 +1,31 @@
-# Остановка процессов на порту из .env
-$envContent = Get-Content .env
-$port = ($envContent | Select-String "PORT=(\d+)").Matches.Groups[1].Value
-Write-Host "Освобождаем порт $port..."
+# WARNING: Development only!
+Write-Host "WARNING: This script is for local development only!" -ForegroundColor Yellow
+
+# Load environment variables
+if (Test-Path .env) {
+    Get-Content .env | ForEach-Object {
+        if ($_ -match '^([^=]+)=(.*)$') {
+            $key = $matches[1].Trim()
+            $value = $matches[2].Trim()
+            [System.Environment]::SetEnvironmentVariable($key, $value)
+        }
+    }
+}
+
+# Get port
+$port = if ($env:PORT) { $env:PORT } else { "3001" }
+Write-Host "Cleaning port $port..." -ForegroundColor Cyan
 npx kill-port $port
 
-# Удаление папок и очистка кэша
-Write-Host "Удаляем .next и node_modules..."
+# Clean directories and cache
+Write-Host "Removing .next and node_modules..."
 Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
 Remove-Item -Recurse -Force node_modules -ErrorAction SilentlyContinue
 
-Write-Host "Очищаем кэш npm..."
+Write-Host "Cleaning npm cache..."
 npm cache clean --force
 
-Write-Host "Устанавливаем зависимости заново..."
+Write-Host "Installing dependencies..."
 npm install
 
-Write-Host "Очистка завершена успешно!" 
+Write-Host "Done! Run 'npm run dev' to start" -ForegroundColor Green 

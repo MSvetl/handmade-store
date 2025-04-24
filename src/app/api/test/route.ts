@@ -1,5 +1,4 @@
-import { NextResponse } from 'next/server';
-import type { SuccessResponse } from '@/types/api';
+import { createSuccessResponse } from '@/utils/api';
 
 /**
  * GET-обработчик для тестового API эндпоинта
@@ -31,32 +30,9 @@ import type { SuccessResponse } from '@/types/api';
  *   "code": 500
  * }
  */
-export async function GET() {
-  try {
-    const response: SuccessResponse<{ status: string }> = {
-      status: 'success',
-      success: true,
-      message: 'Сервер работает нормально',
-      timestamp: new Date().toISOString(),
-      data: { status: 'ok' }
-    };
-
-    return new Response(JSON.stringify(response), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    });
-  } catch (error) {
-    console.error('Test endpoint error:', error);
-    return new Response(JSON.stringify({
-      status: 'error',
-      success: false,
-      message: 'Внутренняя ошибка сервера',
-      timestamp: new Date().toISOString(),
-      error: 'Internal Server Error',
-      code: 500
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
+export async function GET(): Promise<Response> {
+  return createSuccessResponse(
+    { status: 'ok' },
+    'Сервер работает нормально'
+  );
 } 

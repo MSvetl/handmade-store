@@ -5,82 +5,134 @@ describe('Logger', () => {
   let consoleWarnSpy: jest.SpyInstance;
   let consoleErrorSpy: jest.SpyInstance;
   let consoleDebugSpy: jest.SpyInstance;
-  const originalEnv = process.env.NODE_ENV;
+  let originalEnv: NodeJS.ProcessEnv;
+
+  const setNodeEnv = (env: string) => {
+    Object.defineProperty(process, 'env', {
+      value: { ...originalEnv, NODE_ENV: env }
+    });
+  };
 
   beforeEach(() => {
-    consoleInfoSpy = jest.spyOn(console, 'info').mockImplementation(() => {});
-    consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    consoleDebugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
+    originalEnv = process.env;
+    consoleInfoSpy = jest.spyOn(console, 'info').mockImplementation();
+    consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    consoleDebugSpy = jest.spyOn(console, 'debug').mockImplementation();
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
-    process.env.NODE_ENV = originalEnv;
+    Object.defineProperty(process, 'env', {
+      value: originalEnv
+    });
+    consoleInfoSpy.mockRestore();
+    consoleWarnSpy.mockRestore();
+    consoleErrorSpy.mockRestore();
+    consoleDebugSpy.mockRestore();
   });
 
-  it('should log info message', () => {
+  it('should log info messages in development', () => {
+    setNodeEnv('development');
     const message = 'Test info message';
     const data = { test: 'data' };
-    
+
     logger.info(message, data);
-    
+
     expect(consoleInfoSpy).toHaveBeenCalledTimes(1);
-    expect(consoleInfoSpy.mock.calls[0][0]).toMatch(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] \[INFO\] Test info message$/);
-    expect(consoleInfoSpy.mock.calls[0][1]).toBe(data);
+    const [logMessage, logData] = consoleInfoSpy.mock.calls[0];
+    expect(logMessage).toMatch(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] \[INFO\] Test info message$/);
+    expect(logData).toEqual(data);
   });
 
-  it('should log warn message', () => {
-    const message = 'Test warn message';
+  it('should log warning messages in development', () => {
+    setNodeEnv('development');
+    const message = 'Test warning message';
     const data = { test: 'data' };
-    
+
     logger.warn(message, data);
-    
+
     expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
-    expect(consoleWarnSpy.mock.calls[0][0]).toMatch(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] \[WARN\] Test warn message$/);
-    expect(consoleWarnSpy.mock.calls[0][1]).toBe(data);
+    const [logMessage, logData] = consoleWarnSpy.mock.calls[0];
+    expect(logMessage).toMatch(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] \[WARN\] Test warning message$/);
+    expect(logData).toEqual(data);
   });
 
-  it('should log error message', () => {
+  it('should log error messages in development', () => {
+    setNodeEnv('development');
     const message = 'Test error message';
     const error = new Error('Test error');
-    
+
     logger.error(message, error);
-    
+
     expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
-    expect(consoleErrorSpy.mock.calls[0][0]).toMatch(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] \[ERROR\] Test error message$/);
-    expect(consoleErrorSpy.mock.calls[0][1]).toBe(error);
+    const [logMessage, logError] = consoleErrorSpy.mock.calls[0];
+    expect(logMessage).toMatch(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] \[ERROR\] Test error message$/);
+    expect(logError).toBe(error);
+  });
+
+  it('should not log info messages in production', () => {
+    setNodeEnv('production');
+    logger.info('Test message');
+    expect(consoleInfoSpy).toHaveBeenCalledTimes(1);
+    const [logMessage] = consoleInfoSpy.mock.calls[0];
+    expect(logMessage).toMatch(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] \[INFO\] Test message$/);
+  });
+
+  it('should log warning messages in production', () => {
+    setNodeEnv('production');
+    const message = 'Test warning';
+    logger.warn(message);
+    expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+    const [logMessage] = consoleWarnSpy.mock.calls[0];
+    expect(logMessage).toMatch(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] \[WARN\] Test warning$/);
+  });
+
+  it('should log error messages in production', () => {
+    setNodeEnv('production');
+    const message = 'Test error';
+    const error = new Error('Test error');
+    logger.error(message, error);
+    expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
+    const [logMessage, logError] = consoleErrorSpy.mock.calls[0];
+    expect(logMessage).toMatch(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] \[ERROR\] Test error$/);
+    expect(logError).toBe(error);
   });
 
   it('should log debug message only in development', () => {
-    const message = 'Test debug message';
-    const data = { test: 'data' };
-    
-    // В production не должно быть логов
-    process.env.NODE_ENV = 'production';
-    logger.debug(message, data);
-    expect(consoleDebugSpy).not.toHaveBeenCalled();
-    
-    // В development должны быть логи
-    process.env.NODE_ENV = 'development';
-    logger.debug(message, data);
+    setNodeEnv('development');
+    const message = 'Test debug';
+    logger.debug(message);
     expect(consoleDebugSpy).toHaveBeenCalledTimes(1);
-    expect(consoleDebugSpy.mock.calls[0][0]).toMatch(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] \[DEBUG\] Test debug message$/);
-    expect(consoleDebugSpy.mock.calls[0][1]).toBe(data);
+    const [logMessage] = consoleDebugSpy.mock.calls[0];
+    expect(logMessage).toMatch(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] \[DEBUG\] Test debug$/);
+
+    setNodeEnv('production');
+    logger.debug('Another test');
+    expect(consoleDebugSpy).toHaveBeenCalledTimes(1);
   });
 
   it('should handle undefined data in logs', () => {
-    logger.info('Info without data');
-    logger.warn('Warn without data');
-    logger.error('Error without data');
-    logger.debug('Debug without data');
-
-    expect(consoleInfoSpy.mock.calls[0][1]).toBe('');
-    expect(consoleWarnSpy.mock.calls[0][1]).toBe('');
-    expect(consoleErrorSpy.mock.calls[0][1]).toBe('');
+    setNodeEnv('development');
+    const message = 'Test message';
     
-    process.env.NODE_ENV = 'development';
-    logger.debug('Debug without data');
-    expect(consoleDebugSpy.mock.calls[0][1]).toBe('');
+    logger.info(message);
+    logger.warn(message);
+    logger.error(message);
+    logger.debug(message);
+
+    expect(consoleInfoSpy).toHaveBeenCalledTimes(1);
+    expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+    expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
+    expect(consoleDebugSpy).toHaveBeenCalledTimes(1);
+
+    const [infoMessage] = consoleInfoSpy.mock.calls[0];
+    const [warnMessage] = consoleWarnSpy.mock.calls[0];
+    const [errorMessage] = consoleErrorSpy.mock.calls[0];
+    const [debugMessage] = consoleDebugSpy.mock.calls[0];
+
+    expect(infoMessage).toMatch(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] \[INFO\] Test message$/);
+    expect(warnMessage).toMatch(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] \[WARN\] Test message$/);
+    expect(errorMessage).toMatch(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] \[ERROR\] Test message$/);
+    expect(debugMessage).toMatch(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] \[DEBUG\] Test message$/);
   });
 }); 

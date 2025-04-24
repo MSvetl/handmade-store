@@ -1,5 +1,5 @@
 import { HTTP_STATUS } from '@/config/constants';
-import { ApiResponse } from '@/types/api';
+import type { ApiResponse } from '@/types/api';
 
 /**
  * Создает стандартизированный ответ API
@@ -11,17 +11,31 @@ import { ApiResponse } from '@/types/api';
 export function createApiResponse<T>(
   status: 'success' | 'error',
   data?: T,
-  error?: string,
-  message: string = status === 'success' ? 'Операция выполнена успешно' : 'Произошла ошибка'
-): ApiResponse<T> {
-  return {
+  error?: Error | null,
+  message?: string
+): Response {
+  const response: ApiResponse<T> = {
     status,
     success: status === 'success',
+    message: message || (status === 'success' ? 'Success' : 'Error'),
     timestamp: new Date().toISOString(),
-    message,
-    data,
-    error
   };
+
+  if (data) {
+    response.data = data;
+  }
+
+  if (error) {
+    response.error = error.message;
+    if (error instanceof ApiError) {
+      response.code = error.code;
+    }
+  }
+
+  return new Response(JSON.stringify(response), {
+    headers: { 'Content-Type': 'application/json' },
+    status: status === 'success' ? HTTP_STATUS.OK : HTTP_STATUS.INTERNAL_SERVER_ERROR
+  });
 }
 
 /**
@@ -29,10 +43,7 @@ export function createApiResponse<T>(
  * @param data Данные для включения в ответ
  * @param message Сообщение пользователю (опционально)
  */
-export function createSuccessResponse<T>(
-  data: T,
-  message: string = 'Операция выполнена успешно'
-): ApiResponse<T> {
+export function createSuccessResponse<T>(data: T, message?: string): Response {
   return createApiResponse('success', data, undefined, message);
 }
 
@@ -42,10 +53,17 @@ export function createSuccessResponse<T>(
  * @param message Сообщение пользователю (опционально)
  * @param statusCode HTTP код статуса (по умолчанию 500)
  */
-export function createErrorResponse(
-  error: string,
-  message: string = 'Произошла ошибка',
-  statusCode: number = HTTP_STATUS.INTERNAL_SERVER_ERROR
-): ApiResponse<undefined> {
-  return createApiResponse('error', undefined, error, message);
+export function createErrorResponse(error: Error | string, message?: string): Response {
+  const err = typeof error === 'string' ? new Error(error) : error;
+  return createApiResponse('error', undefined, err, message);
+}
+
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public readonly code: string = 'INTERNAL_SERVER_ERROR',
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
 } 

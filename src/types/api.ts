@@ -5,13 +5,14 @@
  * @property {string} message - Сообщение для пользователя
  * @property {string} timestamp - Временная метка в формате ISO
  */
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   status: 'success' | 'error';
+  success: boolean;
   message: string;
   timestamp: string;
-  success: boolean;
   data?: T;
   error?: string;
+  code?: string;
 }
 
 /**
@@ -23,9 +24,9 @@ export interface ApiResponse<T = any> {
  */
 export interface ErrorResponse extends ApiResponse {
   status: 'error';
-  code: number;
   success: false;
   error: string;
+  code?: string;
 }
 
 /**
@@ -35,7 +36,7 @@ export interface ErrorResponse extends ApiResponse {
  * @extends {ApiResponse}
  * @property {unknown} [data] - Опциональные данные ответа
  */
-export interface SuccessResponse<T = any> extends ApiResponse<T> {
+export interface SuccessResponse<T = unknown> extends ApiResponse<T> {
   status: 'success';
   success: true;
   data: T;

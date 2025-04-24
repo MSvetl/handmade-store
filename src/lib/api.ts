@@ -1,6 +1,6 @@
 import { APP_CONFIG } from '@/config/constants';
 import { logger } from './logger';
-import type { ApiResponse, ErrorResponse } from '@/types/api';
+import type { ErrorResponse } from '@/types/api';
 
 interface FetchOptions extends RequestInit {
   timeout?: number;

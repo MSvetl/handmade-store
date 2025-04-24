@@ -1,10 +1,10 @@
-import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { logger } from '@/lib/logger';
 import { HTTP_STATUS } from '@/config/constants';
+import type { ApiResponse } from '@/types/api';
 
 // Вспомогательная функция для создания ответа
-function createResponse(body: any, init?: ResponseInit): Response {
+function createResponse(body: ApiResponse<unknown>, init?: ResponseInit): Response {
   return new Response(JSON.stringify(body), {
     ...init,
     headers: {
@@ -33,6 +33,7 @@ export function middleware(request: NextRequest): Response {
       return createResponse(
         {
           status: 'error',
+          success: false,
           message: 'Method not allowed',
           timestamp: new Date().toISOString(),
         },
@@ -57,6 +58,7 @@ export function middleware(request: NextRequest): Response {
     return createResponse(
       {
         status: 'error',
+        success: false,
         message: 'Internal Server Error',
         timestamp: new Date().toISOString(),
       },

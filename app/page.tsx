@@ -18,7 +18,7 @@ import Button from './components/Button';
  * 
  * @component
  */
-export default function Home() {
+export default function Home(): React.ReactElement {
   // Состояние для хранения ответа от сервера
   const [response, setResponse] = useState<string | null>(null);
   // Состояние для отображения загрузки
@@ -30,7 +30,7 @@ export default function Home() {
    * Обработчик клика по кнопке
    * Отправляет запрос к тестовому API эндпоинту
    */
-  const handleTestClick = async () => {
+  const handleTestClick = async (): Promise<void> => {
     setIsLoading(true);
     setError(null);
     setResponse(null);
